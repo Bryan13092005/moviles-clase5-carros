@@ -1,9 +1,14 @@
-import { FlatList, StyleSheet, Text, View } from "react-native";
+import { useState } from "react";
+import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
 import { useCarros } from "@/hooks/use-carros";
 
 export default function Explore(){
   //misma query key que index porque comparten la cache con esta vista, pero mientras los datos este frescos
   const {data:carros=[]}=useCarros()
+  const [ordenPrecio, setOrdenPrecio] = useState<"asc" | "desc">("asc")
+  const carrosOrdenados = [...carros].sort((a, b) =>
+    ordenPrecio === "asc" ? a.precio - b.precio : b.precio - a.precio
+  )
 
   return(
     <View style={styles.container}>
@@ -11,8 +16,19 @@ export default function Explore(){
         <Text style={styles.tituloPatio}>PATIO </Text>
         <Text style={styles.tituloTuerca}>TUERCA</Text>
       </Text>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={`Ordenar precio: de ${ordenPrecio === "asc" ? "menor a mayor" : "mayor a menor"}`}
+        accessibilityHint="Toca para cambiar el orden de los precios"
+        onPress={() => setOrdenPrecio(orden => orden === "asc" ? "desc" : "asc")}
+        style={styles.sortButton}
+      >
+        <Text style={styles.sortButtonText}>
+          Precio: {ordenPrecio === "asc" ? "menor a mayor ↑" : "mayor a menor ↓"}
+        </Text>
+      </Pressable>
       <FlatList
-        data={carros}
+        data={carrosOrdenados}
         keyExtractor={item=>item.id}
         contentContainerStyle={{ paddingBottom: 24 }}
         renderItem={({item})=>(
@@ -35,6 +51,18 @@ const styles = StyleSheet.create({
   titulo: { fontSize: 32, fontWeight: '900', letterSpacing: 1, marginHorizontal: 16, marginBottom: 12 },
   tituloPatio: { color: '#E52E2E' },
   tituloTuerca: { color: '#008B8B' },
+  sortButton: {
+    alignSelf: 'flex-start',
+    backgroundColor: '#FFFFFF',
+    borderColor: '#E5E7EB',
+    borderRadius: 9999,
+    borderWidth: 1,
+    marginHorizontal: 16,
+    marginBottom: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+  },
+  sortButtonText: { color: '#1F2937', fontSize: 14, fontWeight: '700' },
   card: {
     backgroundColor: '#FFFFFF',
     borderRadius: 16,
