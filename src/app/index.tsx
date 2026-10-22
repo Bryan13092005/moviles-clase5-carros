@@ -1,187 +1,127 @@
-import { useAgregarCarro, useCarros, useEliminarCarro, useActualizarCarro } from "@/hooks/use-carros";
+﻿import CarroFormModal from "@/components/carro-form-modal";
+import { useCarros, useEliminarCarro } from "@/hooks/use-carros";
+import type { Carro } from "@/types/carro";
 import { useState } from "react";
-import { Alert, Button, FlatList, StyleSheet, Text, TextInput, View } from "react-native";
+import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, View } from "react-native";
 
 export default function App(){
-  const [marca,setMarca]=useState('')
-  const [modelo,setModelo]=useState('')
-  const [color,setColor]=useState('')
-  const [anio,setAnio]=useState(0)
-  const [precio,setPrecio]=useState(0.00)
-  const [labelBotonAgregar,setLabelBotonAgregar]=useState('Agregar')
-  const [idActual,setIdActual]=useState('')
-
-
+  // Controla el modal del formulario y el carro en edición (null = agregar)
+  const [modalVisible,setModalVisible]=useState(false)
+  const [carroEditando,setCarroEditando]=useState<Carro|null>(null)
 
   //GET DE TanStack Query para manejar carga de cache y estados
   const {data:carros=[],isLoading,error}=useCarros()
+  const {mutate:eliminarCarro,isPending:eliminando,isError:errorEliminar,variables:eliminandoVars}=useEliminarCarro()
+  const [mensajeExito,setMensajeExito]=useState<string|null>(null)
 
-  //POST  se invalida carros de la cache
-
-  const {mutate:agregarCarro}=useAgregarCarro()
-  const {mutate:eliminarCarro}=useEliminarCarro()
-  const {mutate:actualizarCarro}=useActualizarCarro()
-
-  const seteoValores=()=>{
-    setAnio(2000)
-    setColor('')
-    setMarca('')
-    setPrecio(5000.00)
-    setModelo('')
-    setIdActual('')
-  }
-  //agregar nuevo carro
-  const agregar=async ()=>{
-    if(marca===''||marca===null){
-      Alert.alert('ERROR','ingrese una marca')
-      return
-    }
-    
-    if(modelo===''||modelo===null){
-      Alert.alert('ERROR','ingrese un modelo')
-      return
-    }
-    
-    if(anio<2000||marca===null){
-      Alert.alert('ERROR','ingrese un año valido')
-      return
-    }
-    
-    if(precio<5000||marca===null){
-      Alert.alert('ERROR','ingrese un precio valido (mayor a 5000)')
-      return
-    }
-    
-    if(color===''||marca===null){
-      Alert.alert('ERROR','ingrese un color')
-      return
-    }
-    //agregar y limpiar
-    agregarCarro({marca,modelo,color,precio,anio},{onSuccess:()=>{seteoValores()}})
-
-
+  const eliminar=(id:string)=>{
+    setMensajeExito(null)
+    eliminarCarro({id},{onSuccess:()=>setMensajeExito('Carro eliminado correctamente')})
   }
 
-  const editar=async (idActual:string)=>{
-    if(marca===''||marca===null){
-      Alert.alert('ERROR','ingrese una marca')
-      return
-    }
-    
-    if(modelo===''||modelo===null){
-      Alert.alert('ERROR','ingrese un modelo')
-      return
-    }
-    
-    if(anio<2000||marca===null){
-      Alert.alert('ERROR','ingrese un año valido')
-      return
-    }
-    
-    if(precio<5000||marca===null){
-      Alert.alert('ERROR','ingrese un precio valido (mayor a 5000)')
-      return
-    }
-    
-    if(color===''||marca===null){
-      Alert.alert('ERROR','ingrese un color')
-      return
-    }
-
-    actualizarCarro({marca,modelo,color,precio,anio,id:idActual},{onSuccess:()=>{seteoValores(); setLabelBotonAgregar('Agregar')}})
+  const abrirAgregar=()=>{
+    setCarroEditando(null)
+    setModalVisible(true)
   }
 
-  const rellenarValores=(item:{marca:string,modelo:string,color:string,precio:number,anio:number})=>{
-    setMarca(item.marca)
-    setModelo(item.modelo)
-    setColor(item.color)
-    setPrecio(item.precio)
-    setAnio(item.anio)
+  const abrirEditar=(carro:Carro)=>{
+    setCarroEditando(carro)
+    setModalVisible(true)
   }
-
-  //isloading (es true durante la primera carga cuando no hay datos, por ello mostramosun texto en lugar de la pantalla con la lista vacia)
 
   if(isLoading) return <Text> Cargando ...</Text>
 
   if(error) return <Text>Error: {error?.message}</Text>
 
-  //si get fallo (sin red, servidor caido, etc) error trae la excepcion y no seguimos al return principal
   return(
-    <View style={{flex:1,paddingTop:60,backgroundColor:'#fff'}}>
-      <TextInput
-      value={marca} onChangeText={setMarca} style={{borderWidth:3}} placeholder="Ingrese una marca"
-      />
-      <TextInput
-      value={modelo} onChangeText={setModelo} style={{borderWidth:3}} placeholder="Ingrese un modelo"
-      />
-      <TextInput
-      value={color} onChangeText={setColor} style={{borderWidth:3}} placeholder="Ingrese un color"
-      />
-      <TextInput
-      value={anio ? anio.toString() : ''} onChangeText={(text)=>setAnio(Number(text)||0)} style={{borderWidth:3}} placeholder="Ingrese el año del carro"
-      />
-      <TextInput
-      value={precio ? precio.toString():''} onChangeText={(text)=>setPrecio(Number(text)||0)} style={{borderWidth:3}} placeholder="Ingrese el precio"
-      />
-      <Button title={labelBotonAgregar} onPress={labelBotonAgregar==='Agregar'?agregar:()=>editar(idActual)}/>
+    <View style={styles.container}>
+      <Text style={styles.titulo}>
+        <Text style={styles.tituloPatio}>PATIO</Text>
+        <Text style={styles.tituloTuerca}>TUERCA</Text>
+      </Text>
+      <Pressable style={styles.botonPrimario} onPress={abrirAgregar}>
+        <Text style={styles.botonTexto}>Agregar</Text>
+      </Pressable>
+
+      {errorEliminar&&<Text style={styles.mensajeError}>No se pudo eliminar el carro</Text>}
+      {!errorEliminar&&mensajeExito&&<Text style={styles.mensajeExito}>{mensajeExito}</Text>}
 
       <FlatList
-      data={carros}
-      keyExtractor={item=>item.id}
-      renderItem={
-        ({item})=>(
+        data={carros}
+        keyExtractor={item=>item.id}
+        renderItem={({item})=>(
           <View style={styles.card}>
             <Text style={styles.cardTitle}>{item.marca} {item.modelo}</Text>
             <Text style={styles.cardText}>ID: {item.id}</Text>
             <Text style={styles.cardText}>Color: {item.color}</Text>
             <Text style={styles.cardText}>Año: {item.anio}</Text>
             <Text style={styles.cardPrice}>${item.precio}</Text>
-            <Button title='Eliminar' onPress={()=>{
-              seteoValores()
-              eliminarCarro({id:item.id})}}/>
-            <Button title='Editar' onPress={()=>{
-              rellenarValores(item)
-              setLabelBotonAgregar('Actualizar Valores')
-              setIdActual(item.id)
-            }}/> 
+            <View style={styles.cardAcciones}>
+              <Pressable
+                style={[styles.botonPrimario,styles.botonSecundario,eliminando&&{opacity:0.5}]}
+                disabled={eliminando}
+                onPress={()=>eliminar(item.id)}
+              >
+                {eliminando&&eliminandoVars?.id===item.id
+                  ?<ActivityIndicator size="small" color="#008B8B"/>
+                  :<Text style={styles.botonSecundarioTexto}>Eliminar</Text>}
+              </Pressable>
+              <Pressable style={styles.botonPrimario} onPress={()=>abrirEditar(item)}>
+                <Text style={styles.botonTexto}>Editar</Text>
+              </Pressable>
+            </View>
           </View>
-        )
-      }
+        )}
+      />
+
+      {/* Modal con el formulario (componente aparte) */}
+      <CarroFormModal
+        visible={modalVisible}
+        carro={carroEditando}
+        onClose={()=>setModalVisible(false)}
+        onSuccess={setMensajeExito}
       />
     </View>
   )
 }
 
 const styles = StyleSheet.create({
+  container: { flex: 1, paddingTop: 60, backgroundColor: '#FDE8EC' },
+  botonPrimario: {
+    backgroundColor: '#E52E2E',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 9999,
+    alignItems: 'center',
+    justifyContent: 'center',
+    alignSelf: 'flex-start',
+    marginHorizontal: 16,
+    marginBottom: 8,
+  },
+  titulo: { fontSize: 32, fontWeight: '900', letterSpacing: 1, marginHorizontal: 16, marginBottom: 12,justifyContent: 'center', alignItems: 'center' },
+  tituloPatio: { color: '#E52E2E' },
+  tituloTuerca: { color: '#008B8B' },
+  botonTexto: { fontSize: 14, fontWeight: '700', color: '#FFFFFF' },
+  botonSecundario: { backgroundColor: '#FFFFFF', borderWidth: 1.5, borderColor: '#008B8B', marginHorizontal: 0 },
+  botonSecundarioTexto: { fontSize: 14, fontWeight: '700', color: '#008B8B' },
   card: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 16,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    borderLeftWidth: 6,
+    borderLeftColor: '#E52E2E',
+    padding: 18,
     marginHorizontal: 16,
     marginVertical: 8,
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
     elevation: 3,
   },
-  cardTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#222',
-    marginBottom: 6,
-  },
-  cardText: {
-    fontSize: 14,
-    color: '#555',
-    marginBottom: 2,
-  },
-  cardPrice: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#007AFF',
-    marginTop: 6,
-  },
+  cardTitle: { fontSize: 18, fontWeight: '800', color: '#1F2937', marginBottom: 6 },
+  cardText: { fontSize: 12, fontWeight: '400', color: '#6B7280', marginBottom: 2 },
+  cardPrice: { fontSize: 16, fontWeight: '700', color: '#1E3A8A', marginTop: 6 },
+  mensajeExito: { color: '#047857', fontWeight: '700', marginHorizontal: 16, marginBottom: 8 },
+  mensajeError: { color: '#E52E2E', fontWeight: '700', marginHorizontal: 16, marginBottom: 8 },
+  cardAcciones: { flexDirection: 'row', gap: 8, marginTop: 10 },
 })
