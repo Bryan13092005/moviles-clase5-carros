@@ -1,4 +1,8 @@
 export interface Carro{
     id:string,
-    marca:string
+    marca:string,
+    color:string,
+    modelo:string,
+    anio:number,
+    precio:number
 }

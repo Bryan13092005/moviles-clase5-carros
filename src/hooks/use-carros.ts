@@ -26,7 +26,24 @@ export function useCarros(){
 export function useAgregarCarro(){
     const qc= useQueryClient()
     return useMutation({
-        mutationFn: (marca:string)=>carrosService.add(marca),
+        //mutationFn recibe un solo argumento: un objeto con las variables de la mutacion
+        mutationFn: ({marca,modelo,color,precio,anio}:{marca:string,modelo:string,color:string,precio:number,anio:number})=>carrosService.add(marca,modelo,color,precio,anio),
+        onSuccess:()=>{qc.invalidateQueries({queryKey:KEY})}
+    })
+}
+
+export function useActualizarCarro(){
+    const qc= useQueryClient()
+    return useMutation({
+        mutationFn: ({marca,modelo,color,precio,anio,id}:{marca:string,modelo:string,color:string,precio:number,anio:number,id:string})=>carrosService.update(marca,modelo,color,precio,anio,id),
+        onSuccess:()=>{qc.invalidateQueries({queryKey:KEY})}
+    })
+}
+
+export function useEliminarCarro(){
+    const qc= useQueryClient()
+    return useMutation({
+        mutationFn: ({id}:{id:string})=>carrosService.delete(id),
         onSuccess:()=>{qc.invalidateQueries({queryKey:KEY})}
     })
 }
