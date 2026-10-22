@@ -123,11 +123,11 @@ function Formulario({carro,onClose,onSuccess}:{carro:Carro|null,onClose:()=>void
   return(
     <>
       <Text style={styles.titulo}>{carro?'Editar carro':'Agregar carro'}</Text>
-      {campo('marca','Marca','Ingrese una marca',validarTexto('La marca'))}
-      {campo('modelo','Modelo','Ingrese un modelo',validarTexto('El modelo'))}
-      {campo('color','Color','Ingrese un color',validarTexto('El color'))}
-      {campo('anio','Año','Ingrese el año del carro',validarAnio,'numeric')}
-      {campo('precio','Precio','Ingrese el precio',validarPrecio,'numeric')}
+      {campo('marca','Marca*','Ingrese una marca',validarTexto('La marca'))}
+      {campo('modelo','Modelo*','Ingrese un modelo',validarTexto('El modelo'))}
+      {campo('color','Color*','Ingrese un color',validarTexto('El color'))}
+      {campo('anio','Año (2000 - presente)*','Ingrese el año del carro',validarAnio,'numeric')}
+      {campo('precio','Precio (USD 5000 O MÁS)*','Ingrese el precio',validarPrecio,'numeric')}
 
       {mutacion.isError&&(
         <Text style={styles.error}>No se pudo guardar el carro: {mutacion.error.message}</Text>

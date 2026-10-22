@@ -64,7 +64,7 @@ export default function App(){
               >
                 {eliminando&&eliminandoVars?.id===item.id
                   ?<ActivityIndicator size="small" color="#008B8B"/>
-                  :<Text style={styles.botonSecundarioTexto}>Eliminar</Text>}
+                  :<Text style={styles.botonSecundarioTexto}>Eliminar 🗑️</Text>}
               </Pressable>
               <Pressable style={styles.botonPrimario} onPress={()=>abrirEditar(item)}>
                 <Text style={styles.botonTexto}>Editar</Text>
